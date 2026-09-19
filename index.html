@@ -1,0 +1,304 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio Preview</title>
+    <link rel="stylesheet" href="./App.css">
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- React + ReactDOM (UMD) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel for in-browser JSX transform (zero-install preview only) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+      const { useEffect, useState, useRef } = React;
+
+      function useTyping(words, speed = 100, pause = 1800) {
+        const [display, setDisplay] = useState("");
+        const [wordIdx, setWordIdx] = useState(0);
+        const [charIdx, setCharIdx] = useState(0);
+        const [deleting, setDeleting] = useState(false);
+
+        useEffect(() => {
+          const current = words[wordIdx];
+          const delay = deleting ? speed / 2 : speed;
+
+          const timer = setTimeout(() => {
+            if (!deleting) {
+              setDisplay(current.slice(0, charIdx + 1));
+              if (charIdx + 1 === current.length) {
+                setTimeout(() => setDeleting(true), pause);
+              } else {
+                setCharIdx((c) => c + 1);
+              }
+            } else {
+              setDisplay(current.slice(0, charIdx - 1));
+              if (charIdx - 1 === 0) {
+                setDeleting(false);
+                setWordIdx((w) => (w + 1) % words.length);
+                setCharIdx(0);
+              } else {
+                setCharIdx((c) => c - 1);
+              }
+            }
+          }, delay);
+
+          return () => clearTimeout(timer);
+        }, [charIdx, deleting, wordIdx, words, speed, pause]);
+
+        return display;
+      }
+
+      function useVisible(threshold = 0.15) {
+        const ref = useRef(null);
+        const [visible, setVisible] = useState(false);
+        useEffect(() => {
+          const obs = new IntersectionObserver(
+            ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+            { threshold }
+          );
+          if (ref.current) obs.observe(ref.current);
+          return () => obs.disconnect();
+        }, []);
+        return [ref, visible];
+      }
+
+      function SkillBar({ name, level, color }) {
+        const [ref, visible] = useVisible();
+        return (
+          <div className="skill-item" ref={ref}>
+            <div className="skill-label">
+              <span>{name}</span>
+              <span className="skill-pct">{level}%</span>
+            </div>
+            <div className="skill-track">
+              <div
+                className="skill-fill"
+                style={{ width: visible ? `${level}%` : "0%", background: color }}
+              />
+            </div>
+          </div>
+        );
+      }
+
+      function AnimSection({ id, className, children }) {
+        const [ref, visible] = useVisible();
+        return (
+          <section id={id} ref={ref} className={`section ${className ?? ""} ${visible ? "section--visible" : ""}`}>
+            {children}
+          </section>
+        );
+      }
+
+      const ROLES = ["Web Developer", "CS Student", "Problem Solver", "Tech Enthusiast"];
+
+      const SKILLS = [
+        { name: "HTML", level: 90, color: "linear-gradient(90deg,#e44d26,#f16529)" },
+        { name: "CSS", level: 75, color: "linear-gradient(90deg,#264de4,#2965f1)" },
+        { name: "JavaScript", level: 75, color: "linear-gradient(90deg,#f7df1e,#e6c91a)" },
+        { name: "React", level: 70, color: "linear-gradient(90deg,#61dafb,#21a6c9)" },
+        { name: "Python", level: 75, color: "linear-gradient(90deg,#3572a5,#ffd043)" },
+        { name: "MongoDB", level: 60, color: "linear-gradient(90deg,#4db33d,#3fa732)" },
+        {name: "SQL", level: 65, color: "linear-gradient(90deg,#f7df1e,#e6c91a)"}
+      ];
+
+      const PROJECTS = [
+        {
+          title: "Sports Day Management System",
+          desc: "A full-stack web application for sports event registration, team management, and participant handling — backed by MongoDB.",
+          tags: ["React", "Python(flask)", "MongoDB"],
+          features: ["Student Registration", "Team Management", "Event Handling", "MongoDB Database"],
+          icon: "🏆",
+          gradient: "linear-gradient(135deg,#667eea,#764ba2)",
+        },
+        {
+          title: "Event Registration Forms",
+          desc: "Beginner-level sports registration forms designed with clean, responsive HTML and CSS for seamless user experience.",
+          tags: ["HTML", "CSS"],
+          features: ["Responsive Design", "Clean UI", "Form Validation"],
+          icon: "📋",
+          gradient: "linear-gradient(135deg,#f093fb,#f5576c)",
+        },
+      ];
+
+      function App() {
+        const role = useTyping(ROLES, 90, 2000);
+        const [scrolled, setScrolled] = useState(false);
+        const [menuOpen, setMenuOpen] = useState(false);
+
+        useEffect(() => {
+          const onScroll = () => setScrolled(window.scrollY > 60);
+          window.addEventListener("scroll", onScroll);
+          return () => window.removeEventListener("scroll", onScroll);
+        }, []);
+
+        const navLinks = ["about", "skills", "education", "projects", "contact"];
+
+        return (
+          <div className="app">
+            <div className="bg-blobs" aria-hidden="true">
+              <div className="blob blob--1" />
+              <div className="blob blob--2" />
+              <div className="blob blob--3" />
+            </div>
+
+            <nav className={`navbar${scrolled ? " navbar--scrolled" : ""}`}>
+              <a href="#hero" className="nav-logo">SG<span>.</span></a>
+              <button className={`hamburger${menuOpen ? " open" : ""}`} onClick={() => setMenuOpen((o) => !o)} aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+              </button>
+              <ul className={`nav-links${menuOpen ? " nav-links--open" : ""}`}>
+                {navLinks.map((link) => (
+                  <li key={link}>
+                    <a href={`#${link}`} onClick={() => setMenuOpen(false)}>
+                      {link.charAt(0).toUpperCase() + link.slice(1)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+            <header id="hero" className="hero">
+              <div className="hero__content">
+                <p className="hero__greeting">👋 Hello, I'm</p>
+                <h1 className="hero__name">Sivaganesh S</h1>
+                <p className="hero__role">
+                  <span className="typing">{role}</span>
+                  <span className="cursor">|</span>
+                </p>
+                <p className="hero__sub">Passionate about building elegant web experiences and solving real-world problems through code.</p>
+                <div className="hero__cta">
+                  <a href="#projects" className="btn btn--primary">View Projects</a>
+                  <a href="#contact" className="btn btn--ghost">Get in Touch</a>
+                </div>
+              </div>
+              <div className="hero__avatar" aria-hidden="true">
+                <div className="avatar-ring" />
+                <div className="avatar-ring avatar-ring--2" />
+                <div className="avatar-initials">SG</div>
+              </div>
+            </header>
+
+            <AnimSection id="about">
+              <div className="section__header">
+                <span className="section__label">Who Am I</span>
+                <h2>About <span className="accent">Me</span></h2>
+              </div>
+              <div className="about__grid">
+                <div className="about__text">
+                  <p>
+                    Hello! I'm a <strong>Computer Science student</strong> with a genuine passion for web development
+                    and software technologies. I love building things — from simple web pages to full-stack applications —
+                    and I'm always eager to learn something new.
+                  </p>
+                  <p>
+                    Currently exploring <strong>React</strong>, <strong>Node.js</strong>, and modern design patterns,
+                    I strive to write clean, efficient code that makes a difference.
+                  </p>
+                </div>
+                <div className="about__cards">
+                  {[{ icon: "💻", label: "Projects Built", value: "2" },{ icon: "📚", label: "Technologies", value: "6+" },{ icon: "🎯", label: "Year of Study", value: "2nd" }].map((card) => (
+                    <div className="stat-card" key={card.label}>
+                      <span className="stat-icon">{card.icon}</span>
+                      <strong className="stat-value">{card.value}</strong>
+                      <span className="stat-label">{card.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </AnimSection>
+
+            <AnimSection id="skills">
+              <div className="section__header">
+                <span className="section__label">What I Know</span>
+                <h2>My <span className="accent">Skills</span></h2>
+              </div>
+              <div className="skills__grid">
+                {SKILLS.map((s) => <SkillBar key={s.name} {...s} />)}
+              </div>
+            </AnimSection>
+
+            <AnimSection id="education">
+              <div className="section__header">
+                <span className="section__label">My Journey</span>
+                <h2><span className="accent">Education</span></h2>
+              </div>
+              <div className="timeline">
+                <div className="timeline__item">
+                  <div className="timeline__dot" />
+                  <div className="timeline__card">
+                    <span className="timeline__year">2022 – 2025</span>
+                    <h3>BCA - Bachelor of Computer Applications</h3>
+                    <p className="timeline__inst">AVC College of Arts and Science</p>
+                    <p>Studying core CS fundamentals including algorithms, data structures, databases, and web technologies.</p>
+                  </div>
+                </div>
+              </div><br/>
+              <div className="timeline">
+                <div className="timeline__item">
+                  <div className="timeline__dot" />
+                  <div className="timeline__card">
+                    <span className="timeline__year">2025 – 2027</span>
+                    <h3>MCA - Master of Computer Applications</h3>
+                    <p className="timeline__inst">St.Joseph's College</p>
+                    <p>Studying advanced computer science concepts, including algorithms, data structures, database management, software engineering, web technologies, and application development.</p>
+                  </div>
+                </div>
+              </div>
+            </AnimSection>
+
+            <AnimSection id="projects">
+              <div className="section__header">
+                <span className="section__label">What I've Built</span>
+                <h2>My <span className="accent">Projects</span></h2>
+              </div>
+              <div className="projects__grid">
+                {PROJECTS.map((proj) => (
+                  <div className="project-card" key={proj.title}>
+                    <div className="project-card__top" style={{ background: proj.gradient }}>
+                      <span className="project-icon">{proj.icon}</span>
+                    </div>
+                    <div className="project-card__body">
+                      <h3>{proj.title}</h3>
+                      <p>{proj.desc}</p>
+                      <div className="project-tags">{proj.tags.map((t) => <span className="tag" key={t}>{t}</span>)}</div>
+                      <ul className="project-features">{proj.features.map((f) => <li key={f}>✓ {f}</li>)}</ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </AnimSection>
+
+            <AnimSection id="contact">
+              <div className="section__header">
+                <span className="section__label">Let's Connect</span>
+                <h2>Get in <span className="accent">Touch</span></h2>
+              </div>
+              <div className="contact__grid">
+                {[{ icon: "💼", label: "LinkedIn", value: "linkedin.com/in/sivaganesh", href: "https://www.linkedin.com/in/sivaganesh-s-27a4533b1" },{ icon: "🐙", label: "GitHub", value: "github.com/sivaganesh", href: "https://github.com/Sivaganesh-246" },{ icon: "✉️", label: "Email", value: "sivaganeshsjc042@gmail.com", href: "mailto:sivaganeshsjc042@gmail.com" },{ icon: "📱", label: "Phone", value: "+91 6381368951", href: "tel:+916381368951" }].map((item) => (
+                  <a className="contact-card" href={item.href} key={item.label} target={item.href.startsWith("http") ? "_blank" : undefined} rel={item.href.startsWith("http") ? "noreferrer" : undefined}>
+                    <span className="contact-icon">{item.icon}</span>
+                    <span className="contact-label">{item.label}</span>
+                    <span className="contact-value">{item.value}</span>
+                  </a>
+                ))}
+              </div>
+            </AnimSection>
+
+            <footer className="footer">
+              <p>Crafted with <span className="heart">♥</span> by <strong>Sivaganesh</strong> · © 2026</p>
+            </footer>
+          </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(React.createElement(App));
+    </script>
+  </body>
+</html>
