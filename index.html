@@ -177,10 +177,18 @@
                   <a href="#contact" className="btn btn--ghost">Get in Touch</a>
                 </div>
               </div>
-              <div className="hero__avatar" aria-hidden="true">
+              <div className="hero__avatar">
                 <div className="avatar-ring" />
                 <div className="avatar-ring avatar-ring--2" />
-                <div className="avatar-initials">SG</div>
+                <img
+                  className="profile-photo"
+                  src="./profile.jpg"
+                  alt="Sivaganesh S"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = "./profile.png";
+                  }}
+                />
               </div>
             </header>
 
